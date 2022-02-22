@@ -1,0 +1,65 @@
+syntax = "proto3";
+
+option go_package = "proto_test";
+
+message PbScalar {
+  bytes key = 1;
+}
+
+message PbPoint {
+  bytes key = 1;
+};
+
+message PbCoinV2 {
+  int32 Version = 1;
+  bytes Info = 2;
+  PbPoint PublicKey = 3;
+  PbPoint Commitment = 4;
+  PbPoint KeyImage = 5;
+  PbScalar SharedConcealRandom = 6;
+  PbScalar SharedRandom = 7;
+  bytes TxRandom = 8;
+  PbScalar Mask = 9;
+  PbScalar Amount = 10;
+  PbPoint AssetTag = 11;
+}
+
+message PbInnerProductProof {
+  repeated PbPoint L = 1;
+  repeated PbPoint R = 2;
+  PbScalar A = 3;
+  PbScalar B = 4;
+  PbPoint P = 5;
+}
+
+message PbRangeProof {
+  repeated PbPoint CmsValues = 1;
+  PbPoint A = 2;
+  PbPoint S = 3;
+  PbPoint T1 = 4;
+  PbPoint T2 = 5;
+  PbScalar TauX = 6;
+  PbScalar THat = 7;
+  PbScalar Mu = 8;
+  PbInnerProductProof InnerProof = 9;
+}
+
+message PbProofV2 {
+  int32 Version = 1;
+  PbRangeProof RangeProof = 2;
+  repeated PbCoinV2 InputCoins = 3;
+  repeated PbCoinV2 OutputCoins = 4;
+}
+
+message PbTxVer2 {
+  int32 Version = 1;
+  string Type = 2;
+  int64 LockTime = 3;
+  uint64 Fee = 4;
+  bytes Info = 5;
+  bytes SigPubKey = 6;
+  bytes Sig = 7;
+  PbProofV2 Proof = 8;
+  int32 LastByte = 9;
+  bytes Metadata = 10;
+}
