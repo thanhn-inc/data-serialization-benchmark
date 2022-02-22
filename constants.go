@@ -1,5 +1,5 @@
 package main
 
 const (
-	backwardBlocks = 1000000
+	backwardBlocks = 400000
 )

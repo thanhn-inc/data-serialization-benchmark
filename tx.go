@@ -10,12 +10,19 @@ import (
 	"os"
 )
 
-var dataDir = "./data"
+const rootDataDir = "./data"
 
-func sampleData(numTxs int) error {
-	randomTxs, err := getRandomTxs(numTxs)
+func sampleData(numTxs int, isPrv bool) error {
+	randomTxs, err := getRandomTxs(numTxs, isPrv)
 	if err != nil {
 		return err
+	}
+
+	var dataDir string
+	if isPrv {
+		dataDir = fmt.Sprintf("%v/prv", rootDataDir)
+	} else {
+		dataDir = fmt.Sprintf("%v/token", rootDataDir)
 	}
 
 	for _, tx := range randomTxs {
@@ -39,10 +46,16 @@ func sampleData(numTxs int) error {
 	return nil
 }
 
-func loadTxs() ([]metadata.Transaction, error) {
+func loadTxs(isPrv bool) ([]metadata.Transaction, error) {
 	res := make([]metadata.Transaction, 0)
 
-	files, err := ioutil.ReadDir("./data")
+	var dataDir string
+	if isPrv {
+		dataDir = rootDataDir + "/prv"
+	} else {
+		dataDir = rootDataDir + "/token"
+	}
+	files, err := ioutil.ReadDir(dataDir)
 	if err != nil {
 		return nil, err
 	}

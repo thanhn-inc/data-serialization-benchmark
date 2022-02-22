@@ -6,14 +6,19 @@ import (
 )
 
 func Test_sampleData(t *testing.T) {
-	err := sampleData(20)
+	err := sampleData(100, true)
+	if err != nil {
+		panic(err)
+	}
+
+	err = sampleData(100, false)
 	if err != nil {
 		panic(err)
 	}
 }
 
 func Test_loadTxs(t *testing.T) {
-	txs, err := loadTxs()
+	txs, err := loadTxs(true)
 	if err != nil {
 		panic(err)
 	}
