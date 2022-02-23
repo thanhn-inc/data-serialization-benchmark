@@ -267,3 +267,67 @@ func Test_ProtoBufToTxToken(t *testing.T) {
 		protoTxs = append(protoTxs, protoTx)
 	}
 }
+
+func Test_TxTokenToCompactBytes(t *testing.T) {
+	txs, err := loadTxs(false)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("LOAD TXS successfully!!!!")
+
+	txCount := 0
+	minRate := 1000.0
+	maxRate := 0.0
+	totalRate := float64(0)
+	minSizeTxHash := ""
+	maxSizeTxHash := ""
+	minTimeRate := 1000.0
+	maxTimeRate := 0.0
+	totalTimeRate := 0.0
+	for i, tx := range txs {
+		prefix := fmt.Sprintf("[i: %v, txHash: %v]", i, tx.Hash().String()[:10])
+		txV2, ok := tx.(*tx_ver2.TxToken)
+		if !ok {
+			continue
+		}
+
+		start := time.Now()
+		compactBytes, err := TxTokenToCompactBytes(txV2)
+		if err != nil {
+			panic(err)
+		}
+		protoTime := time.Since(start).Seconds()
+
+		start = time.Now()
+		jsb, _ := json.Marshal(txV2)
+		jsbTime := time.Since(start).Seconds()
+
+		timeRate := protoTime / jsbTime
+		if timeRate > maxTimeRate {
+			maxTimeRate = timeRate
+		}
+		if timeRate < minTimeRate {
+			minTimeRate = timeRate
+		}
+		totalTimeRate += timeRate
+
+		rate := float64(len(compactBytes)) / float64(len(jsb))
+		totalRate += rate
+		if rate < minRate {
+			minRate = rate
+			minSizeTxHash = tx.Hash().String()
+		}
+		if rate > maxRate {
+			maxRate = rate
+			maxSizeTxHash = tx.Hash().String()
+		}
+		//fmt.Println(string(jsb))
+		fmt.Printf("%v jsonLength: %v, protoLength: %v, rate: %v\n", prefix, len(jsb), len(compactBytes), rate)
+		fmt.Printf("%v jsbTime: %v, protoTime: %v, rate: %v\n\n", prefix, jsbTime, protoTime, timeRate)
+		txCount++
+	}
+	fmt.Printf("minRate: %v(%v), maxRate: %v(%v), avgRate: %v\n", minRate, minSizeTxHash, maxRate, maxSizeTxHash,
+		totalRate/float64(txCount))
+	fmt.Printf("minTimeRate: %v, maxTimeRate: %v, avgTimeRate: %v\n", minTimeRate, maxTimeRate, totalTimeRate/float64(txCount))
+}

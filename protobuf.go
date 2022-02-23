@@ -334,20 +334,20 @@ func TxToCompactBytes(tx *tx_ver2.Tx) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	return dataBytes, nil
-
-	//var buf bytes.Buffer
-	//zw := gzip.NewWriter(&buf)
-	//_, err = zw.Write(dataBytes)
-	//if err != nil {
-	//	return nil, err
-	//}
 	//
-	//_ = zw.Close()
-	//res := buf.Bytes()
-	//
-	//return res, nil
+	//return dataBytes, nil
+
+	var buf bytes.Buffer
+	zw := gzip.NewWriter(&buf)
+	_, err = zw.Write(dataBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	_ = zw.Close()
+	res := buf.Bytes()
+
+	return res, nil
 }
 
 func CompactBytesToTx(data []byte) (*tx_ver2.Tx, error) {
@@ -449,8 +449,8 @@ func TxTokenToCompactBytes(tx *tx_ver2.TxToken) ([]byte, error) {
 		return nil, err
 	}
 
-	res := buf.Bytes()
 	_ = zw.Close()
+	res := buf.Bytes()
 
 	return res, nil
 }
