@@ -3,8 +3,10 @@ package main
 import (
 	"fmt"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
+	"github.com/incognitochain/go-incognito-sdk-v2/common/base58"
 	"github.com/incognitochain/go-incognito-sdk-v2/metadata"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler"
+	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 )
 
 func getTxsByBlockNumber(blkHeight uint64, shardID byte) ([]string, error) {
@@ -38,23 +40,59 @@ func getTxsByBlockNumber(blkHeight uint64, shardID byte) ([]string, error) {
 func getRandomTxs(numTxs int, isPrv bool) ([]metadata.Transaction, error) {
 	res := make([]metadata.Transaction, 0)
 	count := 0
+	mapOTACoinLengths, err := ic.GetOTACoinLength()
+	if err != nil {
+		return nil, err
+	}
+
+	tokenID := common.PRVCoinID
+	otaCoinLength := mapOTACoinLengths[common.PRVIDStr]
+	if !isPrv {
+		otaCoinLength = mapOTACoinLengths[common.ConfidentialAssetID.String()]
+		tokenID = common.ConfidentialAssetID
+	}
+
+	addedTxs := make(map[string]bool)
 	for count < numTxs {
 		shardID := common.RandInt() % common.MaxShardNumber
-		bestBlocks, err := ic.GetBestBlock()
+		currentOTANums := otaCoinLength[byte(shardID)]
+		prefix := fmt.Sprintf("[Shard %v, isPRV %v]", shardID, isPrv)
+
+		idxList := make([]uint64, 0)
+		for i := 0; i < pageSize; i++ {
+			idxList = append(idxList, common.RandUint64()%currentOTANums)
+		}
+		otaCoins, err := ic.GetOTACoinsByIndices(byte(shardID), tokenID.String(), idxList)
 		if err != nil {
 			return nil, err
 		}
-		bestBlock := bestBlocks[shardID]
-		blockToSample := bestBlock - backwardBlocks + common.RandUint64()%backwardBlocks
-		prefix := fmt.Sprintf("[blockToSample %v]", blockToSample)
-		txHashes, err := getTxsByBlockNumber(blockToSample, byte(shardID))
-		if err != nil {
-			continue
+
+		pkList := make([]string, 0)
+		for _, otaCoin := range otaCoins {
+			if wallet.IsPublicKeyBurningAddress(otaCoin.GetPublicKey().ToBytesS()) {
+				continue
+			}
+			pkList = append(pkList, base58.Base58Check{}.Encode(otaCoin.GetPublicKey().ToBytesS(), 0))
 		}
 
-		txMap, err := ic.GetTxs(txHashes, false)
+		txHashes, err := ic.GetTxHashByPublicKeys(pkList)
 		if err != nil {
-			//fmt.Printf("%v error: %v\n\n", prefix, err)
+			return nil, err
+		}
+		txList := make([]string, 0)
+		for _, txHashList := range txHashes {
+			for _, txHash := range txHashList {
+				if addedTxs[txHash] {
+					continue
+				}
+				txList = append(txList, txHash)
+				addedTxs[txHash] = true
+			}
+		}
+
+		txMap, err := ic.GetTxs(txList, true)
+		if err != nil {
+			fmt.Printf("%v GetTxs error: %v\n", prefix, err)
 			continue
 		}
 		added := 0

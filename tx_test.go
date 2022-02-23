@@ -6,12 +6,12 @@ import (
 )
 
 func Test_sampleData(t *testing.T) {
-	err := sampleData(100, true)
+	err := sampleData(5000, true)
 	if err != nil {
 		panic(err)
 	}
 
-	err = sampleData(100, false)
+	err = sampleData(5000, false)
 	if err != nil {
 		panic(err)
 	}
