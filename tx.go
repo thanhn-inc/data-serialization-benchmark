@@ -67,7 +67,7 @@ func loadTxs(isPrv bool) ([]metadata.Transaction, error) {
 			return nil, err
 		}
 
-		rawEncodedData := make([]byte, 100000)
+		rawEncodedData := make([]byte, 500000)
 		n, err := file.Read(rawEncodedData)
 		if err != nil {
 			return nil, err
