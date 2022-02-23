@@ -1,6 +1,7 @@
 package main
 
 const (
-	backwardBlocks = 400000
-	pageSize       = 100
+	backwardBlocks        = 400000
+	defaultBytesSliceSize = 500000
+	pageSize              = 100
 )
